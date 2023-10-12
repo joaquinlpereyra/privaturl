@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Decrypted Site</title>
+</head>
+<body>
+
+    <div id="content">
+        <!-- Decrypted content will go here -->
+    </div>
+
+    <script type="text/javascript">
+        function displayFailureMessage() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <h1 style="font-size: 4em;">YOU SHALL NOT PASS</h1>
+                <img src="https://i.kym-cdn.com/entries/icons/original/000/002/144/You_Shall_Not_Pass!_0-1_screenshot.jpg" alt="Gandalf Meme"> `;
+        }
+
+        function displayKeyForm() {
+            const contentDiv = document.getElementById('content');
+
+            contentDiv.innerHTML = `
+                <div style="text-align: center; margin: 2em; font-size: 1.5em;">
+                    <p>If you have a key for this URL, enter it below:</p>
+                    <form id="keyForm">
+                        <input type="text" id="keyInput" placeholder="Enter your key here">
+                        <input type="submit" value="Submit">
+                    </form>
+                    <p>If you don't have a key, this page was not intended for you.</p>
+                </div>
+            `;
+
+            document.getElementById('keyForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const key = document.getElementById('keyInput').value;
+                // Call your decryption function here using 'key' as the passphrase
+                decryptContent(key);
+            });
+        }
+
+        function decryptContent(passphrase) {
+            try {
+                const encryptedHTMLBuffer = Uint8Array.from(atob(encryptedHTML), c => c.charCodeAt(0));
+                const iv = Uint8Array.from(atob(b64iv), c => c.charCodeAt(0));
+                const keyBuffer = Uint8Array.from(atob(passphrase), c => c.charCodeAt(0));
+
+                window.crypto.subtle.importKey(
+                    "raw",
+                    keyBuffer,
+                    "AES-GCM",
+                    false,
+                    ["decrypt"]
+                ).then(function(key) {
+                    return window.crypto.subtle.decrypt(
+                        {
+                            name: "AES-GCM",
+                            iv: iv
+                        },
+                        key,
+                        encryptedHTMLBuffer
+                    );
+                }).then(function(decryptedArrayBuffer) {
+                    const decryptedHTML = new TextDecoder().decode(decryptedArrayBuffer);
+                    document.getElementById('content').innerHTML = decryptedHTML;
+                }).catch(function(e) {
+                    displayFailureMessage();
+                });
+            } catch (e) {
+                    displayFailureMessage();
+            }
+        }
+
+        // Placeholders to be replaced by the Rust program
+        const encryptedHTML = "---PLACEHOLDER-DATA---";
+        const b64iv = "---PLACEHOLDER-IV---";
+        displayKeyForm();
+    </script>
+
+</body>
+</html>
