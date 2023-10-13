@@ -82,7 +82,16 @@ and some silly anime gifs.
 You can use an alternative template without building from source by specifying an 
 `--alt-template`. You can use `template/index.html` as inspiration. 
 
-The only requirement is that the template must have `---PLACEHOLDER-DATA---` and a `PLACEHOLDER-IV---` 
-so that privaturl knows where to inject the encrypted contents. Again, looking at 
-`template/index.html` should be helpful.
+There are two requirements:
+
+Firstly, the template must have `---PLACEHOLDER-DATA---` and a `PLACEHOLDER-IV---` 
+so that privaturl knows where to inject the encrypted contents. 
+
+Secondly, you should take into account that the encrypted data, initialization vector 
+and provided key will be encoded using a variant of base64 which is URL-safe (no `/`, '+')
+and without padding. 
+
+
+Again, looking at `template/index.html` should be helpful. Look at the `urlSafeToBase64` function 
+to see an example of how to handle the encoding specifically.
 
