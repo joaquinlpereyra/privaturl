@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Decrypted Site</title>
 </head>
+
 <body>
 
     <div id="content">
@@ -11,10 +13,20 @@
 
     <script type="text/javascript">
         function displayFailureMessage() {
+            const urls = [
+                "https://agaricus.xyz/gifs/anime-stop-thats-illegal.gif",
+                "https://agaricus.xyz/gifs/anya-forger-no-oomfie.gif",
+                "https://agaricus.xyz/gifs/smug-anime.gif",
+            ];
+            const randomIndex = Math.floor(Math.random() * urls.length);
+            const chosenUrl = urls[randomIndex];
+
             const contentDiv = document.getElementById('content');
             contentDiv.innerHTML = `
-                <h1 style="font-size: 4em;">YOU SHALL NOT PASS</h1>
-                <img src="https://i.kym-cdn.com/entries/icons/original/000/002/144/You_Shall_Not_Pass!_0-1_screenshot.jpg" alt="Gandalf Meme"> `;
+                <div style="text-align: center;">
+                    <h1 style="font-size: 4em; color: pink; font-family: 'Courier New', Courier, monospace;">NOT ALLOWED</h1>
+                    <img src="${chosenUrl}" alt="Meme">
+                </div>`;
         }
 
         function displayKeyForm() {
@@ -31,19 +43,47 @@
                 </div>
             `;
 
-            document.getElementById('keyForm').addEventListener('submit', function(e) {
+            document.getElementById('keyForm').addEventListener('submit', function (e) {
                 e.preventDefault();
                 const key = document.getElementById('keyInput').value;
-                // Call your decryption function here using 'key' as the passphrase
                 decryptContent(key);
             });
         }
 
+        // Allow the user to just input the key into a hashtag (url.com#foo, foo is the hashtag) 
+        // in the URL 
+        window.addEventListener('DOMContentLoaded', (event) => {
+            let hashKey = window.location.hash.substring(1);  // Remove the '#'
+            if (hashKey) {
+                decryptContent(hashKey);
+            }
+        });
+        
+        // Change the page whenever the hash changes
+        window.addEventListener('hashchange', function() {
+            let hashKey = window.location.hash.substring(1); // Remove the '#'
+            if (hashKey) {
+                decryptContent(hashKey);
+            }
+        });
+
+        // Our Rust program creates URL-safe base64 with no padding for simplicity  
+        // This will convert it back too standard base64 so we can use atob to convert 
+        // it to bytes 
+        function urlSafeToBase64(urlSafeBase64) {
+            let base64 = urlSafeBase64.replace(/-/g, '+').replace(/_/g, '/');
+            let padding = base64.length % 4;
+            if (padding) {
+                base64 += '='.repeat(4 - padding);
+            }
+            return base64;
+        }
+
         function decryptContent(passphrase) {
             try {
-                const encryptedHTMLBuffer = Uint8Array.from(atob(encryptedHTML), c => c.charCodeAt(0));
-                const iv = Uint8Array.from(atob(b64iv), c => c.charCodeAt(0));
-                const keyBuffer = Uint8Array.from(atob(passphrase), c => c.charCodeAt(0));
+                const encryptedHTMLBuffer = Uint8Array.from(atob(urlSafeToBase64(encryptedHTML)), c => c.charCodeAt(0));
+                const iv = Uint8Array.from(atob(urlSafeToBase64(b64iv)), c => c.charCodeAt(0));
+                const keyBuffer = Uint8Array.from(atob(urlSafeToBase64(passphrase)), c => c.charCodeAt(0));
 
                 window.crypto.subtle.importKey(
                     "raw",
@@ -51,23 +91,20 @@
                     "AES-GCM",
                     false,
                     ["decrypt"]
-                ).then(function(key) {
+                ).then(function (key) {
                     return window.crypto.subtle.decrypt(
-                        {
-                            name: "AES-GCM",
-                            iv: iv
-                        },
+                        { name: "AES-GCM", iv: iv },
                         key,
                         encryptedHTMLBuffer
                     );
-                }).then(function(decryptedArrayBuffer) {
+                }).then(function (decryptedArrayBuffer) {
                     const decryptedHTML = new TextDecoder().decode(decryptedArrayBuffer);
                     document.getElementById('content').innerHTML = decryptedHTML;
-                }).catch(function(e) {
+                }).catch(function (e) {
                     displayFailureMessage();
                 });
             } catch (e) {
-                    displayFailureMessage();
+                displayFailureMessage();
             }
         }
 
@@ -78,4 +115,5 @@
     </script>
 
 </body>
+
 </html>

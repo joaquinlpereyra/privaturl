@@ -21,6 +21,9 @@ struct Args {
 
     #[arg(short, long, default_value = "private.html")]
     output: PathBuf,
+
+    #[arg(short, long, help = "[optional] Use an alternative template. See the README for details.")]
+    alt_template: Option<PathBuf>,
 }
 
 fn encrypt(data: &[u8]) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
@@ -37,7 +40,7 @@ fn encrypt(data: &[u8]) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
 }
 
 fn base64(data: &[u8]) -> String {
-    let engine = base64::engine::general_purpose::STANDARD;
+    let engine = base64::engine::general_purpose::URL_SAFE_NO_PAD;
     engine.encode(data)
 }
 
@@ -46,7 +49,11 @@ fn main() -> std::io::Result<()> {
     let embedded = read_to_string(&args.data)?.into_bytes();
     let (encrypted, iv, key) = encrypt(&embedded);
     let (encoded_site, encoded_iv, encoded_key) = (base64(&encrypted), base64(&iv), base64(&key));
-    let mut html_template = String::from(TEMPLATE_HTML);
+    let mut html_template = match args.alt_template {
+        Some(alt) => read_to_string(&alt)?, 
+        None => String::from(TEMPLATE_HTML)
+    };
+
     html_template = html_template.replace("---PLACEHOLDER-DATA---", &encoded_site);
     html_template = html_template.replace("---PLACEHOLDER-IV---", &encoded_iv);
     write(&args.output, html_template)?;

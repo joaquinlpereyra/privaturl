@@ -6,32 +6,37 @@ Upon presenting the correct key, the encrypted blob is interpreted as HTML and s
 You can put private content on a public URL and share it via any other secure 
 transport, such as Whatsapp or Signal.
 
-```
-./privateurl 
+Recipients can either put the key in a form or simply access `site.com/secret.html#{YOUR_KEY}` to view the content.
 
+```
+./privaturl 
 Generate HTML that reveals data only with the correct passphrase
 
 Usage: privaturl [OPTIONS] --data <FILE>
 
 Options:
   -d, --data <FILE>
-  -o, --output <OUTPUT>  [default: private.html]
-  -h, --help             Print help
-  -V, --version          Print version
+  -o, --output <OUTPUT>              [default: private.html]
+  -a, --alt-template <ALT_TEMPLATE>  [optional] Use an alternative template. See the README for details.
+  -h, --help                         Print help
+  -V, --version                      Print version
 ```
 
+You can optionally provide an alternative template with `-a`. See the **Template** section.
 
 # Example
 
 You can find an example [here](https://agaricus.xyz/encrypted.html).
 
-The key is `a9xh4KXk6nofBsEaVKvzMW4HlW68PpXuBF8bT6pDb2U=`.
+The key is `YCe2PzENsCx5BRFGdfMF32Q6v5JEtO3SnUeXWRXo64Q`.
+
+Note you can also access: `https://agaricus.xyz/encrypted.html#YCe2PzENsCx5BRFGdfMF32Q6v5JEtO3SnUeXWRXo64Q` directly.
 
 The exact process is simple:
 
 ```
 ./privateurl -d example.html
-Your key is: a9xh4KXk6nofBsEaVKvzMW4HlW68PpXuBF8bT6pDb2U=
+Your key is: YCe2PzENsCx5BRFGdfMF32Q6v5JEtO3SnUeXWRXo64Q
 Your output HTML is at: private.html
 ```
 
@@ -57,4 +62,27 @@ All in all: if you are thinking about using this to protect serious, sensitive, 
 It is probably useless anyway, why would you want to embeded that data into an HTML? 
 If you wanna create private static webpages to share around without someone looking into them 
 without they key... then yes! 
+
+## Is sharing the key via URL safe?
+
+Passing sensitive information via the URL is generally frowned upon -- with good reason. 
+In this case it is mostly OK though, although the key does get stored into the browser's history.
+
+- We have no concerns over server logs as this is intended for static webpages
+- The `Referer` must specifically **not** include the `fragment` part of the URL, as [per the spec](https://www.rfc-editor.org/rfc/rfc7231#section-5.5.2).
+
+If you are worried about the key persisting in the recipients browser's history, don't share it directly 
+and let the recipient know. 
+
+# Template
+
+The default template is a very simple form with some code to handle the fragment-key feature 
+and some silly anime gifs. 
+
+You can use an alternative template without building from source by specifying an 
+`--alt-template`. You can use `template/index.html` as inspiration. 
+
+The only requirement is that the template must have `---PLACEHOLDER-DATA---` and a `PLACEHOLDER-IV---` 
+so that privaturl knows where to inject the encrypted contents. Again, looking at 
+`template/index.html` should be helpful.
 
